@@ -23,9 +23,16 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::useBootstrap();
 
-        $setting_data = Setting::where('id',1)->first();
-
-        view()->share('global_setting_data', $setting_data);
+        // Only load settings if not in console mode and database is accessible
+        if (!$this->app->runningInConsole()) {
+            try {
+                $setting_data = Setting::where('id',1)->first();
+                view()->share('global_setting_data', $setting_data);
+            } catch (\Exception $e) {
+                // Silently fail if database is not accessible
+                view()->share('global_setting_data', null);
+            }
+        }
 
     }
 }
