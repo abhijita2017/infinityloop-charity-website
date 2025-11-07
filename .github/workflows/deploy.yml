@@ -72,13 +72,15 @@ jobs:
     
     - name: Create Deployment Archive
       run: |
-        tar -czf deployment.tar.gz \
-          --exclude='.git' \
+        mkdir -p deploy_temp
+        rsync -a --exclude='.git' \
           --exclude='.github' \
           --exclude='tests' \
           --exclude='node_modules' \
-          --exclude='storage/logs/*.log' \
-          .
+          --exclude='storage/logs' \
+          --exclude='.env' \
+          . deploy_temp/
+        tar -czf deployment.tar.gz -C deploy_temp .
     
     - name: Deploy to EC2 via SCP
       uses: appleboy/scp-action@master
