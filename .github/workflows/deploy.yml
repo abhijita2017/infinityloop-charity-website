@@ -157,27 +157,39 @@ jobs:
           sudo -u www-data php artisan route:cache
           sudo -u www-data php artisan view:cache
           
-          # Configure Apache vhost
+          # Configure Nginx vhost
           echo "🌐 Configuring web server..."
-          sudo tee /etc/apache2/sites-available/charity-website.conf > /dev/null << 'VHOSTEOF'
-          <VirtualHost *:80>
-              ServerName charity-website.infinityloop.online
-              DocumentRoot /var/www/infinityloop-charity-website/public
+          sudo tee /etc/nginx/sites-available/charity-website > /dev/null << 'VHOSTEOF'
+          server {
+              listen 80;
+              server_name charity-website.infinityloop.online;
+              root /var/www/infinityloop-charity-website/public;
               
-              <Directory /var/www/infinityloop-charity-website/public>
-                  AllowOverride All
-                  Require all granted
-              </Directory>
+              index index.php index.html;
               
-              ErrorLog ${APACHE_LOG_DIR}/charity-website-error.log
-              CustomLog ${APACHE_LOG_DIR}/charity-website-access.log combined
-          </VirtualHost>
+              location / {
+                  try_files $uri $uri/ /index.php?$query_string;
+              }
+              
+              location ~ \.php$ {
+                  fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+                  fastcgi_index index.php;
+                  fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+                  include fastcgi_params;
+              }
+              
+              location ~ /\.(?!well-known).* {
+                  deny all;
+              }
+              
+              access_log /var/log/nginx/charity-website-access.log;
+              error_log /var/log/nginx/charity-website-error.log;
+          }
           VHOSTEOF
           
-          # Enable site and restart Apache
-          sudo a2ensite charity-website.conf
-          sudo a2enmod rewrite
-          sudo systemctl restart apache2
+          # Enable site and restart Nginx
+          sudo ln -sf /etc/nginx/sites-available/charity-website /etc/nginx/sites-enabled/
+          sudo nginx -t && sudo systemctl reload nginx
           
           # Cleanup
           rm /tmp/deployment.tar.gz
