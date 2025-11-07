@@ -1,4 +1,4 @@
-Package Installation: 
+Package Installation:
 -----------------------------
 composer require stripe/stripe-php
 
@@ -39,11 +39,11 @@ return [
 ];
 
 
-Migration: 
+Migration:
 -----------------------------
 $table->id();
 $table->string('payment_id');
-$table->string('product_name'); 
+$table->string('product_name');
 $table->string('quantity');
 $table->string('amount');
 $table->string('currency');
@@ -54,7 +54,7 @@ $table->string('payment_method');
 $table->timestamps();
 
 
-Controller 
+Controller
 -----------------------------
 use App\Models\Payment;
 
